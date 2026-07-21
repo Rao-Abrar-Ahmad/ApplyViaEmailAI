@@ -96,6 +96,13 @@ export interface Database {
 }
 
 export function createDb(env: Env): Kysely<Database> {
+  //console.log("DB binding:", env.DB);
+
+  // env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table'")
+  //   .all()
+  //   .then(result => console.log("Tables:", result.results))
+  //   .catch(console.error);
+
   return new Kysely<Database>({
     dialect: new D1Dialect({
       database: env.DB,
