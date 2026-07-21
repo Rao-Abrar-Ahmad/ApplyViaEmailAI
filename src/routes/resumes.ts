@@ -4,6 +4,10 @@ import { incrementAnalytics } from "../repositories/analytics";
 import { countResumes, getResume, listResumes } from "../repositories/resumes";
 import type { AppContext } from "../types";
 import { fail, message, ok } from "../utils/http";
+import {
+  uploadResumeToCloudinary,
+  deleteCloudinaryResume,
+} from "../services/cloudinary";
 
 const MAX_RESUMES = 3;
 const MAX_RESUME_SIZE = 5 * 1024 * 1024;
@@ -38,14 +42,8 @@ resumeRoutes.post("/upload", requireAuth, async (c) => {
   }
 
   const resumeId = crypto.randomUUID();
-  const r2Key = `resumes/${user.id}/${resumeId}.pdf`;
-  await c.env.RESUMES.put(r2Key, await file.arrayBuffer(), {
-    httpMetadata: { contentType: "application/pdf" },
-    customMetadata: {
-      userId: user.id,
-      fileName: file.name,
-    },
-  });
+  const publicId = `resumes/${user.id}/${resumeId}`;
+  await uploadResumeToCloudinary(file, publicId, c.env);
 
   const now = Date.now();
   const activeVal = resumeCount === 0 ? 1 : 0;
@@ -53,7 +51,7 @@ resumeRoutes.post("/upload", requireAuth, async (c) => {
     `INSERT INTO resumes (id, userId, name, r2Key, extractedText, fileSize, active, uploadedAt, updatedAt)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
   )
-    .bind(resumeId, user.id, file.name, r2Key, extractedText, file.size, activeVal, now, now)
+    .bind(resumeId, user.id, file.name, publicId, extractedText, file.size, activeVal, now, now)
     .run();
 
   await incrementAnalytics(c.env, user.id, "resumesUploaded");
@@ -73,7 +71,7 @@ resumeRoutes.delete("/:id", requireAuth, async (c) => {
     return fail(c, "Resume not found", 404);
   }
 
-  await c.env.RESUMES.delete(resume.r2Key);
+  await deleteCloudinaryResume(resume.r2Key, c.env);
   await c.env.DB.prepare("DELETE FROM resumes WHERE id = ? AND userId = ?")
     .bind(resume.id, user.id)
     .run();

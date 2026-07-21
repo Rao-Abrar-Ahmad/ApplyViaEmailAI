@@ -14,6 +14,7 @@ import {
   refreshGmailAccessToken,
   sendGmailEmail,
 } from "../services/gmail";
+import { buildCloudinaryResumeUrl } from "../services/cloudinary";
 import type { AppContext, Env } from "../types";
 import { fail, message, normalizeError, ok } from "../utils/http";
 
@@ -120,14 +121,15 @@ async function handleMailAction(c: Context<AppContext>, action: "draft" | "send"
         return fail(c, "Selected resume not found or unauthorized");
       }
 
-      const r2Object = await c.env.RESUMES.get(resume.r2Key);
-      if (!r2Object) {
-        return fail(c, "File missing in storage bucket");
+      const resumeUrl = buildCloudinaryResumeUrl(resume.r2Key, c.env);
+      const response = await fetch(resumeUrl);
+      if (!response.ok) {
+        return fail(c, "Failed to retrieve resume from storage", 500);
       }
 
       attachment = {
         name: resume.name,
-        buffer: await r2Object.arrayBuffer(),
+        buffer: await response.arrayBuffer(),
       };
     }
 

@@ -13,12 +13,6 @@
       "database_id": "apply-via-email-db-local"
     }
   ],
-  "r2_buckets": [
-    {
-      "binding": "RESUMES",
-      "bucket_name": "apply-via-email-resumes"
-    }
-  ],
   "assets": {
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",

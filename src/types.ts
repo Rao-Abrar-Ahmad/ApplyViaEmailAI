@@ -1,6 +1,8 @@
 export interface Env {
   DB: D1Database;
-  RESUMES: R2Bucket;
+  CLOUDINARY_API_KEY: string;
+  CLOUDINARY_API_SECRET: string;
+  CLOUDINARY_CLOUD_NAME: string;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
   GOOGLE_CLIENT_ID: string;
