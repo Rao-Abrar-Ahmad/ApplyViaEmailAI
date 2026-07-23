@@ -9,7 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "types": ["@cloudflare/workers-types"]
+    "types": ["@cloudflare/workers-types","@tailwindcss/vite","@cloudflare/ai"]
   },
   "include": ["src", "worker-configuration.d.ts"]
 }

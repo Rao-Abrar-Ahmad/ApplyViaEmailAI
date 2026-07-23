@@ -1,7 +1,13 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api, Resume, User } from "../api/client";
+import { api, Resume } from "../api/client";
 import { Brand, Field } from "../components/ui";
+import { X } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { DashboardHeader } from "../components/DashboardHeader";
+import ResumeSidebar from "../components/ResumeSidebar";
+import AIChatHelper from "../components/AIChatHelper";
+
 type Draft = {
   email: string;
   company: string;
@@ -9,6 +15,7 @@ type Draft = {
   subject: string;
   body: string;
 };
+
 const blank: Draft = {
   email: "",
   company: "",
@@ -16,131 +23,26 @@ const blank: Draft = {
   subject: "",
   body: "",
 };
+
 export default function DashboardPage() {
-  const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
-  const [resumes, setResumes] = useState<Resume[]>([]);
-  const [prompt, setPrompt] = useState("");
   const [draft, setDraft] = useState<Draft>(blank);
-  const [notice, setNotice] = useState("");
-  const [busy, setBusy] = useState(false);
-  const load = () =>
-    api
-      .resumes()
-      .then(setResumes)
-      .catch((err) => setNotice(err.message));
-  useEffect(() => {
-    api
-      .user()
-      .then(setUser)
-      .then(load)
-      .catch(() => navigate("/login", { replace: true }));
-  }, [navigate]);
-  const generate = async () => {
-    if (!prompt.trim()) return;
-    setBusy(true);
-    setNotice("");
-    try {
-      const result = await api.generate([{ role: "user", content: prompt }]);
-      setDraft({
-        email: result.email,
-        company: result.company,
-        jobTitle: result.jobTitle,
-        subject: result.subject,
-        body: result.body,
-      });
-      setNotice("Email generated. Review it before creating a Gmail draft.");
-    } catch (err) {
-      setNotice(
-        err instanceof Error ? err.message : "Unable to generate an email.",
-      );
-    } finally {
-      setBusy(false);
-    }
-  };
-  if (!user) return <main className="center">Loading workspace…</main>;
+
   return (
-    <main className="workspace">
-      <header>
-        <Brand />
-        <div>
-          <span className="user">{user.name || user.email}</span>
-          <button
-            className="plain"
-            onClick={() => void api.signOut().finally(() => navigate("/"))}
-          >
-            Log out
-          </button>
-        </div>
-      </header>
-      {notice && <p className="notice">{notice}</p>}
-      <div className="grid px-0">
-        <aside className="panel">
-          <p className="eyebrow">Your documents</p>
-          <h2>
-            Resumes <small>{resumes.length}/3</small>
+    <div className="min-h-screen">
+      <DashboardHeader />
+
+      <div className="grid grid-cols-[minmax(230px,0.76fr)_minmax(360px,1.35fr)_minmax(275px,0.9fr)] max-lg:grid-cols-[minmax(220px,0.7fr)_minmax(340px,1.3fr)] max-sm:grid-cols-1 gap-[17px] max-w-[1440px] mx-auto py-[27px] px-4 sm:px-[18px] md:px-[54px] items-start">
+        <ResumeSidebar />
+
+        <AIChatHelper onChange={(data: Draft) => setDraft(data)} />
+
+        <aside className="bg-white border border-[#dfded6] rounded-[13px] p-[21px] max-sm:p-[18px]">
+          <p className="mb-[13px] text-[#39735f] text-[12px] uppercase tracking-[0.14em] font-extrabold text-left">
+            Always editable
+          </p>
+          <h2 className="mb-[22px] text-[21px] tracking-[-0.7px] font-medium text-[#1c1c1a] text-left">
+            Email preview
           </h2>
-          <label className="upload">
-            <input type="file" accept="application/pdf" disabled />
-            <b>Upload a PDF</b>
-            <small>PDF parsing is the next implementation step.</small>
-          </label>
-          {resumes.length === 0 ? (
-            <p className="empty">
-              No resumes yet. Add one to give the assistant context.
-            </p>
-          ) : (
-            resumes.map((resume) => (
-              <div
-                className={`resume ${resume.active ? "active" : ""}`}
-                key={resume.id}
-              >
-                <button
-                  onClick={() => void api.selectResume(resume.id).then(load)}
-                >
-                  {resume.name}
-                  <small>{resume.active ? "Active resume" : "Select"}</small>
-                </button>
-                <button
-                  aria-label={`Delete ${resume.name}`}
-                  onClick={() => void api.deleteResume(resume.id).then(load)}
-                >
-                  ×
-                </button>
-              </div>
-            ))
-          )}
-        </aside>
-        <section className="panel chat">
-          <p className="eyebrow">Session-only conversation</p>
-          <h2>Application assistant</h2>
-          <div className="empty grow">
-            <h3>Start with the job description.</h3>
-            <p>
-              Paste the role and any instructions. Your selected resume and
-              profile are used securely by the Worker.
-            </p>
-          </div>
-          <label className="field">
-            <span>Job description or follow-up</span>
-            <textarea
-              value={prompt}
-              onChange={(event) => setPrompt(event.target.value)}
-              rows={9}
-              placeholder="Paste a job description here…"
-            />
-          </label>
-          <button
-            className="button full"
-            disabled={busy || !prompt.trim()}
-            onClick={() => void generate()}
-          >
-            {busy ? "Generating…" : "Generate email →"}
-          </button>
-        </section>
-        <aside className="panel">
-          <p className="eyebrow">Always editable</p>
-          <h2>Email preview</h2>
           <Field
             label="Recipient email"
             type="email"
@@ -162,7 +64,7 @@ export default function DashboardPage() {
             value={draft.subject}
             onChange={(value) => setDraft({ ...draft, subject: value })}
           />
-          <label className="field">
+          <label className="grid gap-[7px] mb-[17px] text-[#373a35] text-[13px] font-[750] text-left">
             <span>Email body</span>
             <textarea
               rows={12}
@@ -171,13 +73,17 @@ export default function DashboardPage() {
                 setDraft({ ...draft, body: event.target.value })
               }
               placeholder="Your generated email will appear here."
+              className="w-full border border-[#d4d4cd] rounded-lg px-[12px] py-[11px] outline-none text-[#242622] bg-white font-normal focus:border-[#39735f] focus:ring-4 focus:ring-[#39735f]/20 transition-all resize-y"
             />
           </label>
-          <button className="button full" disabled>
+          <button
+            className="w-full rounded-lg px-[15px] py-[10px] font-semibold text-white bg-[#39735f] border border-[#2f6553] disabled:cursor-not-allowed disabled:opacity-60"
+            disabled
+          >
             Connect Gmail in Settings to create a draft
           </button>
         </aside>
       </div>
-    </main>
+    </div>
   );
 }

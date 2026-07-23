@@ -5,12 +5,15 @@
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,
+    "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "types": [
-      "vite/client"
+      "vite/client",
+      "node",
+      "@tailwindcss/vite"
     ]
   },
   "include": [

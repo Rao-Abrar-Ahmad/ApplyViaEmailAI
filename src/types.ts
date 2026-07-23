@@ -9,6 +9,7 @@ export interface Env {
   GOOGLE_CLIENT_SECRET: string;
   ENCRYPTION_SECRET: string;
   APP_URL: string;
+  AI: Ai;
 }
 
 export interface AuthUser {

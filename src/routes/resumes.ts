@@ -24,11 +24,19 @@ resumeRoutes.post("/upload", requireAuth, async (c) => {
   const file = formData.get("file");
   const extractedText = formData.get("extractedText");
 
-  if (!(file instanceof File) || typeof extractedText !== "string" || !extractedText.trim()) {
+  if (
+    !(file instanceof File) ||
+    typeof extractedText !== "string" ||
+    !extractedText.trim()
+  ) {
     return fail(c, "Missing file or extracted plain text");
   }
 
-  if (!file.name.toLowerCase().endsWith(".pdf") || file.type !== "application/pdf") {
+  const isPdf =
+    file.name.toLowerCase().endsWith(".pdf") &&
+    (file.type === "application/pdf" || file.type === "");
+
+  if (!isPdf) {
     return fail(c, "Only PDF files are supported");
   }
 
@@ -43,15 +51,30 @@ resumeRoutes.post("/upload", requireAuth, async (c) => {
 
   const resumeId = crypto.randomUUID();
   const publicId = `resumes/${user.id}/${resumeId}`;
-  await uploadResumeToCloudinary(file, publicId, c.env);
+  try {
+    await uploadResumeToCloudinary(file, publicId, c.env);
+  } catch (error) {
+    console.error(error);
+    return fail(c, "Failed to upload resume. Please try again.", 500);
+  }
 
   const now = Date.now();
   const activeVal = resumeCount === 0 ? 1 : 0;
   await c.env.DB.prepare(
     `INSERT INTO resumes (id, userId, name, r2Key, extractedText, fileSize, active, uploadedAt, updatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   )
-    .bind(resumeId, user.id, file.name, publicId, extractedText, file.size, activeVal, now, now)
+    .bind(
+      resumeId,
+      user.id,
+      file.name,
+      publicId,
+      extractedText,
+      file.size,
+      activeVal,
+      now,
+      now,
+    )
     .run();
 
   await incrementAnalytics(c.env, user.id, "resumesUploaded");
@@ -59,7 +82,7 @@ resumeRoutes.post("/upload", requireAuth, async (c) => {
   return ok(
     c,
     { id: resumeId, name: file.name, active: activeVal === 1 },
-    "Resume uploaded and saved successfully"
+    "Resume uploaded and saved successfully",
   );
 });
 
@@ -71,20 +94,27 @@ resumeRoutes.delete("/:id", requireAuth, async (c) => {
     return fail(c, "Resume not found", 404);
   }
 
-  await deleteCloudinaryResume(resume.r2Key, c.env);
+  try {
+    await deleteCloudinaryResume(resume.r2Key, c.env);
+  } catch (error) {
+    console.error(error);
+    return fail(c, "Failed to delete resume.", 500);
+  }
   await c.env.DB.prepare("DELETE FROM resumes WHERE id = ? AND userId = ?")
     .bind(resume.id, user.id)
     .run();
 
   if (resume.active === 1) {
     const nextResume = await c.env.DB.prepare(
-      "SELECT id FROM resumes WHERE userId = ? ORDER BY uploadedAt DESC LIMIT 1"
+      "SELECT id FROM resumes WHERE userId = ? ORDER BY uploadedAt DESC LIMIT 1",
     )
       .bind(user.id)
       .first<{ id: string }>();
 
     if (nextResume) {
-      await c.env.DB.prepare("UPDATE resumes SET active = 1 WHERE id = ? AND userId = ?")
+      await c.env.DB.prepare(
+        "UPDATE resumes SET active = 1 WHERE id = ? AND userId = ?",
+      )
         .bind(nextResume.id, user.id)
         .run();
     }
@@ -102,11 +132,12 @@ resumeRoutes.patch("/:id/select", requireAuth, async (c) => {
   }
 
   await c.env.DB.batch([
-    c.env.DB.prepare("UPDATE resumes SET active = 0 WHERE userId = ?").bind(user.id),
-    c.env.DB.prepare("UPDATE resumes SET active = 1 WHERE id = ? AND userId = ?").bind(
-      resume.id,
-      user.id
+    c.env.DB.prepare("UPDATE resumes SET active = 0 WHERE userId = ?").bind(
+      user.id,
     ),
+    c.env.DB.prepare(
+      "UPDATE resumes SET active = 1 WHERE id = ? AND userId = ?",
+    ).bind(resume.id, user.id),
   ]);
 
   return message(c, "Active resume selected successfully");

@@ -1,54 +1,51 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
+import {
+  Sparkles,
+  FileText,
+  Mail,
+  ShieldCheck,
+  ArrowRight,
+} from "lucide-react";
 
-export function Brand() {
+export function Brand({
+  type = "landing",
+}: {
+  type?: "landing" | "dashboard";
+}) {
   return (
-    <Link className="brand" to="/">
-      Apply<span>Via</span>EmailAI
+    <Link
+      className="text-[#20211e] text-[19px] font-extrabold tracking-[-0.8px] hover:opacity-90 transition-opacity"
+      to={type === "landing" ? "/" : "/dashboard"}
+    >
+      Apply<span className="text-[#39735f]">Via</span>EmailAI
     </Link>
   );
 }
+
 export function Icon({
   name,
+  className,
 }: {
   name: "sparkle" | "file" | "mail" | "shield" | "arrow";
+  className?: string;
 }) {
-  const paths = {
-    sparkle: (
-      <path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" />
-    ),
-    file: (
-      <>
-        <path d="M6 2h8l4 4v16H6z" />
-        <path d="M14 2v5h5M9 12h6M9 16h6" />
-      </>
-    ),
-    mail: (
-      <>
-        <rect x="3" y="5" width="18" height="14" rx="2" />
-        <path d="m3 7 9 6 9-6" />
-      </>
-    ),
-    shield: (
-      <>
-        <path d="M12 3 20 6v5c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6z" />
-        <path d="m9 12 2 2 4-4" />
-      </>
-    ),
-    arrow: <path d="M5 12h14m-6-6 6 6-6 6" />,
+  const icons = {
+    sparkle: Sparkles,
+    file: FileText,
+    mail: Mail,
+    shield: ShieldCheck,
+    arrow: ArrowRight,
   };
+  const IconComponent = icons[name];
   return (
-    <svg
-      className="icon"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
+    <IconComponent
+      className={className || "w-[28px] h-[28px] text-[#39735f] shrink-0"}
       aria-hidden="true"
-    >
-      {paths[name]}
-    </svg>
+      strokeWidth={1.8}
+    />
   );
 }
+
 export function Field({
   label,
   value,
@@ -63,13 +60,14 @@ export function Field({
   required?: boolean;
 }) {
   return (
-    <label className="field">
-      <span className="field-label">{label}</span>
+    <label className="grid gap-[7px] mb-[17px] text-[#373a35] text-[13px] font-[750] text-left">
+      <span className="block">{label}</span>
       <input
         type={type}
         value={value}
         required={required}
         onChange={(event) => onChange(event.target.value)}
+        className="w-full border border-[#d4d4cd] rounded-lg px-[12px] py-[11px] outline-none text-[#242622] bg-white font-normal focus:border-[#39735f] focus:ring-4 focus:ring-[#39735f]/20 transition-all"
       />
     </label>
   );

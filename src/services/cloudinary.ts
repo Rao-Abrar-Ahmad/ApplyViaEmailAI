@@ -6,26 +6,32 @@ function bufferToHex(buffer: ArrayBuffer) {
     .join("");
 }
 
-async function createSignature(params: Record<string, string>, apiSecret: string) {
+async function createSignature(
+  params: Record<string, string>,
+  apiSecret: string,
+) {
   const sortedKeys = Object.keys(params).sort();
-  const payload = sortedKeys.map((key) => `${key}=${params[key]}`).join("&") + apiSecret;
-  const digest = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(payload));
+  const payload =
+    sortedKeys.map((key) => `${key}=${params[key]}`).join("&") + apiSecret;
+  const digest = await crypto.subtle.digest(
+    "SHA-1",
+    new TextEncoder().encode(payload),
+  );
   return bufferToHex(digest);
 }
 
 export async function uploadResumeToCloudinary(
   file: File,
   publicId: string,
-  env: Env
+  env: Env,
 ): Promise<{ publicId: string; secureUrl: string; bytes: number }> {
   const timestamp = Math.floor(Date.now() / 1000);
   const signature = await createSignature(
     {
       public_id: publicId,
-      resource_type: "raw",
       timestamp: timestamp.toString(),
     },
-    env.CLOUDINARY_API_SECRET
+    env.CLOUDINARY_API_SECRET,
   );
 
   const formData = new FormData();
@@ -41,7 +47,7 @@ export async function uploadResumeToCloudinary(
     {
       method: "POST",
       body: formData,
-    }
+    },
   );
 
   if (!response.ok) {
@@ -66,10 +72,9 @@ export async function deleteCloudinaryResume(publicId: string, env: Env) {
   const signature = await createSignature(
     {
       public_id: publicId,
-      resource_type: "raw",
       timestamp: timestamp.toString(),
     },
-    env.CLOUDINARY_API_SECRET
+    env.CLOUDINARY_API_SECRET,
   );
 
   const body = new URLSearchParams({
@@ -88,7 +93,7 @@ export async function deleteCloudinaryResume(publicId: string, env: Env) {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: body.toString(),
-    }
+    },
   );
 
   if (!response.ok) {
@@ -97,6 +102,10 @@ export async function deleteCloudinaryResume(publicId: string, env: Env) {
   }
 }
 
-export function buildCloudinaryResumeUrl(publicId: string, env: Env, format = "pdf") {
+export function buildCloudinaryResumeUrl(
+  publicId: string,
+  env: Env,
+  format = "pdf",
+) {
   return `https://res.cloudinary.com/${env.CLOUDINARY_CLOUD_NAME}/raw/upload/${publicId}.${format}`;
 }

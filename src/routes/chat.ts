@@ -4,7 +4,6 @@ import { requireAuth } from "../middleware/auth";
 import { getActiveResume } from "../repositories/resumes";
 import { getSettings } from "../repositories/settings";
 import { generateEmailWithAI } from "../services/ai";
-import { decrypt } from "../services/encryption";
 import type { AppContext } from "../types";
 import { fail, normalizeError, ok } from "../utils/http";
 
@@ -14,7 +13,7 @@ const chatSchema = z.object({
       z.object({
         role: z.enum(["user", "assistant"]),
         content: z.string().min(1),
-      })
+      }),
     )
     .default([]),
 });
@@ -33,14 +32,13 @@ chatRoutes.post("/generate", requireAuth, async (c) => {
     getSettings(c.env, user.id),
   ]);
 
-  if (!settings?.openRouterKey) {
-    return fail(c, "Please configure your OpenRouter API Key in Settings first.");
+  if (!settings) {
+    return fail(c, "Settings not found");
   }
 
   try {
     const aiResponse = await generateEmailWithAI({
-      apiKey: await decrypt(settings.openRouterKey, c.env.ENCRYPTION_SECRET),
-      model: settings.preferredModel || "google/gemini-2.5-flash",
+      ai: c.env.AI,
       profile: {
         name: user.name,
         headline: settings.headline || "",

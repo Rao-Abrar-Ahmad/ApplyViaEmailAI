@@ -13,7 +13,9 @@ export type ResumeRecord = {
 };
 
 export async function countResumes(env: Env, userId: string) {
-  const result = await env.DB.prepare("SELECT COUNT(*) as count FROM resumes WHERE userId = ?")
+  const result = await env.DB.prepare(
+    "SELECT COUNT(*) as count FROM resumes WHERE userId = ?",
+  )
     .bind(userId)
     .first<{ count: number }>();
   return result?.count ?? 0;
@@ -21,7 +23,7 @@ export async function countResumes(env: Env, userId: string) {
 
 export async function listResumes(env: Env, userId: string) {
   const resumes = await env.DB.prepare(
-    "SELECT id, name, fileSize, active, uploadedAt, updatedAt FROM resumes WHERE userId = ? ORDER BY uploadedAt DESC"
+    "SELECT id, name, fileSize, r2Key, active, uploadedAt, updatedAt FROM resumes WHERE userId = ? ORDER BY uploadedAt DESC",
   )
     .bind(userId)
     .all();
@@ -36,7 +38,7 @@ export async function getResume(env: Env, userId: string, resumeId: string) {
 
 export async function getActiveResume(env: Env, userId: string) {
   return env.DB.prepare(
-    "SELECT extractedText FROM resumes WHERE userId = ? AND active = 1"
+    "SELECT extractedText FROM resumes WHERE userId = ? AND active = 1",
   )
     .bind(userId)
     .first<{ extractedText: string }>();
