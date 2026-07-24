@@ -54,8 +54,6 @@ export interface Database {
     linkedin: string | null;
     skills: string | null;
     achievements: string | null;
-    openRouterKey: string | null;
-    preferredModel: string | null;
     customPrompt: string | null;
     gmailConnected: number;
     gmailTokens: string | null;

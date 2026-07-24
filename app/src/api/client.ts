@@ -1,4 +1,5 @@
 import { createAuthClient } from "better-auth/react";
+import { Settings } from "../lib/types";
 
 export type ApiEnvelope<T> = { success: boolean; data: T; message?: string };
 export type User = {
@@ -91,4 +92,14 @@ export const api = {
       body: form,
     });
   },
+  settings: () => request<Settings>("/settings"),
+  updateSettings: (settings: Partial<Settings>) =>
+    request<unknown>("/settings", {
+      method: "PUT",
+      body: JSON.stringify(settings),
+    }),
+  disconnectGmail: () =>
+    request<void>("/gmail/disconnect", {
+      method: "POST",
+    }),
 };

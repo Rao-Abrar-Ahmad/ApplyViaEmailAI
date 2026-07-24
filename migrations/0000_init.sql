@@ -55,8 +55,6 @@ CREATE TABLE IF NOT EXISTS "settings" (
     "linkedin" TEXT,
     "skills" TEXT,
     "achievements" TEXT,
-    "openRouterKey" TEXT, -- Encrypted
-    "preferredModel" TEXT DEFAULT 'google/gemini-2.5-flash',
     "customPrompt" TEXT,
     "gmailConnected" INTEGER NOT NULL DEFAULT 0,
     "gmailTokens" TEXT, -- Encrypted

@@ -11,8 +11,6 @@ export type SettingsRecord = {
   linkedin: string | null;
   skills: string | null;
   achievements: string | null;
-  openRouterKey: string | null;
-  preferredModel: string | null;
   customPrompt: string | null;
   gmailConnected: number;
   gmailTokens: string | null;
@@ -34,7 +32,7 @@ export async function ensureSettings(env: Env, userId: string) {
   const now = Date.now();
   await env.DB.prepare(
     `INSERT INTO settings (id, userId, preferredModel, gmailConnected, createdAt, updatedAt)
-     VALUES (?, ?, ?, 0, ?, ?)`
+     VALUES (?, ?, ?, 0, ?, ?)`,
   )
     .bind(id, userId, "google/gemini-2.5-flash", now, now)
     .run();
@@ -50,8 +48,6 @@ export async function ensureSettings(env: Env, userId: string) {
     linkedin: "",
     skills: "",
     achievements: "",
-    openRouterKey: null,
-    preferredModel: "google/gemini-2.5-flash",
     customPrompt: "",
     gmailConnected: 0,
     gmailTokens: null,
@@ -64,18 +60,16 @@ export async function updateSettings(
   env: Env,
   userId: string,
   input: {
-    headline: string;
-    experience: number;
-    location: string;
-    portfolio: string;
-    github: string;
-    linkedin: string;
-    skills: string;
-    achievements: string;
-    openRouterKey: string | null;
-    preferredModel: string;
-    customPrompt: string;
-  }
+    headline: string | null;
+    experience: number | null;
+    location: string | null;
+    portfolio: string | null;
+    github: string | null;
+    linkedin: string | null;
+    skills: string | null;
+    achievements: string | null;
+    customPrompt: string | null;
+  },
 ) {
   await env.DB.prepare(
     `UPDATE settings SET
@@ -87,11 +81,9 @@ export async function updateSettings(
       linkedin = ?,
       skills = ?,
       achievements = ?,
-      openRouterKey = ?,
-      preferredModel = ?,
       customPrompt = ?,
       updatedAt = ?
-     WHERE userId = ?`
+     WHERE userId = ?`,
   )
     .bind(
       input.headline,
@@ -102,16 +94,18 @@ export async function updateSettings(
       input.linkedin,
       input.skills,
       input.achievements,
-      input.openRouterKey,
-      input.preferredModel,
       input.customPrompt,
       Date.now(),
-      userId
+      userId,
     )
     .run();
 }
 
-export async function saveGmailTokens(env: Env, userId: string, encryptedTokens: string) {
+export async function saveGmailTokens(
+  env: Env,
+  userId: string,
+  encryptedTokens: string,
+) {
   const now = Date.now();
   await env.DB.prepare(
     `INSERT INTO settings (id, userId, gmailConnected, gmailTokens, createdAt, updatedAt)
@@ -119,7 +113,7 @@ export async function saveGmailTokens(env: Env, userId: string, encryptedTokens:
      ON CONFLICT(userId) DO UPDATE SET
        gmailConnected = 1,
        gmailTokens = excluded.gmailTokens,
-       updatedAt = excluded.updatedAt`
+       updatedAt = excluded.updatedAt`,
   )
     .bind(crypto.randomUUID(), userId, encryptedTokens, now, now)
     .run();

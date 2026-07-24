@@ -18,14 +18,17 @@
   "dependencies": {
     "@better-auth/kysely-adapter": "^1.6.23",
     "better-auth": "^1.6.23",
+    "clsx": "^2.1.1",
     "hono": "^4.12.30",
     "kysely": "^0.29.3",
     "kysely-d1": "^0.4.0",
     "lucide-react": "^1.26.0",
     "pdfjs-dist": "^6.1.200",
+    "radix-ui": "^1.6.5",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1",
+    "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3",
     "zod-to-json-schema": "^3.25.2"
   },

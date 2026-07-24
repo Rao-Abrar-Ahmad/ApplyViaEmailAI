@@ -6,6 +6,39 @@ import {
   ShieldCheck,
   ArrowRight,
 } from "lucide-react";
+import { cn } from "../lib/utils";
+
+export const Button = ({
+  children,
+  variant = "default",
+  size = "default",
+  className,
+  ...props
+}: React.ComponentProps<"button"> & {
+  variant?: "default" | "outline" | "ghost";
+  size?: "default" | "sm" | "lg";
+  className?: string;
+}) => {
+  const buttonVariants = {
+    variant: {
+      default: "bg-[#39735f] text-white hover:bg-[#39735f]/90",
+      outline: "border border-[#d4d4cd] text-[#373a35] hover:bg-[#39735f]/10",
+      ghost: "hover:bg-[#39735f]/10",
+    },
+    size: {
+      default: "px-[12px] py-[11px] text-[13px] font-[750]",
+      sm: "px-[10px] py-[9px] text-[12px] font-[750]",
+      lg: "px-[14px] py-[13px] text-[14px] font-[750]",
+    },
+  };
+  const variantClass = buttonVariants.variant[variant];
+  const sizeClass = buttonVariants.size[size];
+  return (
+    <button className={cn(variantClass, sizeClass, className)} {...props}>
+      {children}
+    </button>
+  );
+};
 
 export function Brand({
   type = "landing",
@@ -68,6 +101,41 @@ export function Field({
         required={required}
         onChange={(event) => onChange(event.target.value)}
         className="w-full border border-[#d4d4cd] rounded-lg px-[12px] py-[11px] outline-none text-[#242622] bg-white font-normal focus:border-[#39735f] focus:ring-4 focus:ring-[#39735f]/20 transition-all"
+      />
+    </label>
+  );
+}
+
+export function TextArea({
+  label,
+  value,
+  onChange,
+  rows = 5,
+  placeholder,
+  className,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  rows?: number;
+  placeholder?: string;
+  className?: string;
+}) {
+  return (
+    <label
+      className={cn(
+        "grid gap-[7px] text-[#373a35] text-[13px] font-[750] text-left",
+        className,
+      )}
+    >
+      <span>{label}</span>
+
+      <textarea
+        rows={rows}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full border border-[#d4d4cd] rounded-lg px-[12px] py-[11px] outline-none text-[#242622] bg-white resize-none font-normal focus:border-[#39735f] focus:ring-4 focus:ring-[#39735f]/20 transition-all"
       />
     </label>
   );
